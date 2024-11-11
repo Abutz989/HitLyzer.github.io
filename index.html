@@ -3,13 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Marker</title>
+    <title>Hit Analyzer</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h2>Upload and Mark Your Photo</h2>
+    <h2>Hit Analyzer</h2>
     <input type="file" id="fileInput" accept="image/*">
     <canvas id="photoCanvas"></canvas>
+
+    <div id="controls">
+        <button id="setDistanceBtn">Set Real-World Distance</button>
+        <button id="calculateBtn">Calculate Mean and Std Dev</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+
+    <div id="info">
+        <p>Real-world distance (meters): <input type="number" id="realDistance" step="0.01"></p>
+        <p>Range to object (meters): <input type="number" id="rangeInput" step="0.01"></p>
+        <p id="output"></p>
+    </div>
 
     <script src="script.js"></script>
 </body>
