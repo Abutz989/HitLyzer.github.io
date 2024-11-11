@@ -106,18 +106,36 @@ calculateBtn.addEventListener('click', () => {
     const pixelDistance = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
     const scale = realDistance / pixelDistance;
 
-    // Convert pixel positions to real-world radians
+    // Calculate midpoint of calibration points in pixel coordinates
+    const midPoint = {
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2
+    };
+
+    // Calculate traverse (horizontal) and elevation (vertical) angles for each point in radians
     const angles = points.map(point => {
-        const dx = (point.x - p1.x) * scale;
-        const dy = (point.y - p1.y) * scale;
-        return Math.atan2(dy, range); // Projected angle in radians
+        const dx = (point.x - midPoint.x) * scale;
+        const dy = (point.y - midPoint.y) * scale;
+        return {
+            traverse: Math.atan2(dx, range), // Horizontal angle in radians
+            elevation: Math.atan2(dy, range)  // Vertical angle in radians
+        };
     });
 
-    // Calculate mean and standard deviation of angles
-    const mean = angles.reduce((a, b) => a + b, 0) / angles.length;
-    const stdDev = Math.sqrt(angles.reduce((sum, angle) => sum + (angle - mean) ** 2, 0) / angles.length);
+    // Calculate mean and standard deviation for traverse and elevation
+    const meanTraverse = angles.reduce((sum, a) => sum + a.traverse, 0) / angles.length;
+    const meanElevation = angles.reduce((sum, a) => sum + a.elevation, 0) / angles.length;
+    const stdDevTraverse = Math.sqrt(angles.reduce((sum, a) => sum + (a.traverse - meanTraverse) ** 2, 0) / angles.length);
+    const stdDevElevation = Math.sqrt(angles.reduce((sum, a) => sum + (a.elevation - meanElevation) ** 2, 0) / angles.length);
 
-    output.textContent = `Mean Angle: ${mean.toFixed(4)} rad, Std Dev: ${stdDev.toFixed(4)} rad`;
+    // Convert to milliradians for output
+    const toMilliRadians = angle => angle * 1000;
+    output.innerHTML = `
+        <strong>Mean Traverse Angle:</strong> ${toMilliRadians(meanTraverse).toFixed(4)} mrad<br>
+        <strong>Mean Elevation Angle:</strong> ${toMilliRadians(meanElevation).toFixed(4)} mrad<br>
+        <strong>Traverse Std Dev:</strong> ${toMilliRadians(stdDevTraverse).toFixed(4)} mrad<br>
+        <strong>Elevation Std Dev:</strong> ${toMilliRadians(stdDevElevation).toFixed(4)} mrad
+    `;
 });
 
 // Reset the canvas and clear points
