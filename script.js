@@ -15,28 +15,46 @@ let calibrationPoints = [];
 let realDistance = 0;
 let range = 0;
 let isCalibrating = false;
+let imageLoaded = false;
 
-// Load and display the image
+// Set canvas size to a square
+const canvasSize = 400;
+canvas.width = canvasSize;
+canvas.height = canvasSize;
+
+// Load and display the image as a square, cropping if necessary
 fileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     const img = new Image();
     img.onload = () => {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+        // Calculate cropping for a square
+        const size = Math.min(img.width, img.height);
+        const offsetX = (img.width - size) / 2;
+        const offsetY = (img.height - size) / 2;
+
+        // Draw the cropped square image to fit the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, canvas.width, canvas.height);
+        imageLoaded = true;
     };
     img.src = URL.createObjectURL(file);
 });
 
 // Set calibration mode to mark two points and enter real-world distance
 setDistanceBtn.addEventListener('click', () => {
+    if (!imageLoaded) {
+        alert("Please upload an image first.");
+        return;
+    }
+
     if (realDistanceInput.value && rangeInput.value) {
         realDistance = parseFloat(realDistanceInput.value);
         range = parseFloat(rangeInput.value);
         isCalibrating = true;
         calibrationPoints = [];
+        points = [];  // Clear other points until calibration is set
         output.textContent = "Select two points for calibration.";
     } else {
         alert("Please enter a real-world distance and range first.");
@@ -45,11 +63,17 @@ setDistanceBtn.addEventListener('click', () => {
 
 // Handle click events for calibration and marking points
 canvas.addEventListener('click', (event) => {
+    if (!isCalibrating && calibrationPoints.length < 2) {
+        alert("Please complete calibration first by selecting two points.");
+        return;
+    }
+
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
     if (isCalibrating) {
+        // Mark calibration points in blue
         calibrationPoints.push({ x, y });
         ctx.fillStyle = 'blue';
         ctx.beginPath();
@@ -61,6 +85,7 @@ canvas.addEventListener('click', (event) => {
             output.textContent = "Calibration complete. Select points to calculate.";
         }
     } else {
+        // Mark other points in red
         points.push({ x, y });
         ctx.fillStyle = 'red';
         ctx.beginPath();
@@ -106,4 +131,5 @@ resetBtn.addEventListener('click', () => {
     rangeInput.value = '';
     output.textContent = '';
     fileInput.value = null;
+    imageLoaded = false;
 });
